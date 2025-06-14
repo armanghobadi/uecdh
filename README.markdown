@@ -2,9 +2,9 @@
 
 ![GitHub](https://img.shields.io/github/license/xai/uecdh) ![MicroPython](https://img.shields.io/badge/MicroPython-v1.19+-blue) ![ESP32](https://img.shields.io/badge/ESP32-Supported-green) ![IoT](https://img.shields.io/badge/IoT-Secure-yellow)
 
-![UECDH ](./Docs/imgs/logo/logo.png)
+![UECDH](./Docs/imgs/logo/logo.png)
 
-**UECDH** is a lightweight, standards-compliant Elliptic Curve Diffie-Hellman (ECDH) key exchange library for MicroPython, optimized for ESP32 and other resource-constrained IoT devices. It enables secure key exchange and encrypted communication over LoRa using AES-CBC with PKCS#7 padding, making it ideal for IoT applications requiring long-range, low-power, and secure communication.
+**UECDH** is a lightweight, standards-compliant Elliptic Curve Diffie-Hellman (ECDH) key exchange library for MicroPython, optimized for ESP32 and other resource-constrained IoT devices. It enables secure key exchange for any communication protocol, such as LoRa, Wi-Fi, Bluetooth, or custom protocols, using SHA256 for key derivation due to the absence of native elliptic curve support in MicroPython. It is ideal for IoT applications requiring secure, low-power communication.
 
 📚 **Language**: [English](#english) | [فارسی](#persian)
 
@@ -13,13 +13,13 @@
 ## English
 
 ### Overview
-UECDH provides a secure and efficient ECDH key exchange mechanism for MicroPython on ESP32, using SHA256 for key derivation due to the absence of native elliptic curve support. It is designed exclusively for LoRa communication, enabling secure data exchange in IoT systems. The library complies with:
+UECDH provides a secure and efficient ECDH key exchange mechanism for MicroPython on ESP32, using SHA256 for key derivation. It is designed to be protocol-agnostic, allowing secure key exchange over any communication medium, including LoRa, Wi-Fi, Bluetooth, or others. The library complies with:
 - **NIST SP 800-56A Rev. 3 (2020)**: ECDH key agreement.
 - **NIST SP 800-90A Rev. 1 (2015)**: Random number generation.
 - **FIPS 180-4 (2015)**: SHA256 hash function.
-- **ISO/IEC 25533-3 (2018)**: Asymmetric ciphers.
+- **ISO/IEC 18033-3 (2010)**: Public-key cryptography requirements.
 
-This README includes a complete IoT example with **Sender** and **Receiver** ESP32 devices that exchange keys and send/receive AES-encrypted messages over LoRa using CBC mode with IV and PKCS#7 padding.
+This README includes an IoT example demonstrating secure communication between **Sender** and **Receiver** ESP32 devices over LoRa using AES-CBC with PKCS#7 padding. This is just one application; UECDH can be adapted for any protocol by modifying the transport layer.
 
 ### Features
 | Feature | Description |
@@ -28,7 +28,7 @@ This README includes a complete IoT example with **Sender** and **Receiver** ESP
 | ⏱ **Constant-Time** | Prevents timing attacks with constant-time operations. |
 | 🗑 **Secure Cleanup** | Erases keys securely to prevent leakage. |
 | 📏 **ESP32 Optimized** | Minimal memory and CPU usage for IoT. |
-| 🌐 **LoRa Compatibility** | Optimized for LoRa communication with AES-CBC. |
+| 🌐 **Protocol-Agnostic** | Compatible with any communication protocol (e.g., LoRa, Wi-Fi, Bluetooth). |
 | ✅ **Test Suite** | Comprehensive tests for reliability. |
 
 ### Flowcharts
@@ -61,20 +61,20 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Start] --> B{Key Available?}
-    B -->|No| C[Generate Key Pair]
-    B -->|Yes| D[Get Shared Key]
+    B -->|"No"| C[Generate Key Pair]
+    B -->|"Yes"| D[Get Shared Key]
     C --> D
     D --> E[Prepare Message]
     E --> F[Add PKCS#7 Padding]
     F --> G{Generate IV}
     G --> H{Initialize AES-CBC}
-    H -->|Key: Shared Key, IV| I[Encrypt Message]
+    H -->|"Key: Shared Key, IV"| I[Encrypt Message]
     I --> J{Encryption Success?}
-    J -->|No| K[Error: Encryption Failed]
-    J -->|Yes| L[Send IV + Encrypted Message via LoRa]
-    L --> M{LoRa Available?}
-    M -->|No| N[Error: LoRa Unavailable]
-    M -->|Yes| O[Transmit Message]
+    J -->|"No"| K[Error: Encryption Failed]
+    J -->|"Yes"| L[Send IV + Encrypted Message]
+    L --> M{Transport Available?}
+    M -->|"No"| N[Error: Transport Unavailable]
+    M -->|"Yes"| O[Transmit Message]
     O --> P[Clean Keys]
     P --> Q[End]
 ```
@@ -83,21 +83,21 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Start] --> B{Key Available?}
-    B -->|No| C[Generate Key Pair]
-    B -->|Yes| D[Get Shared Key]
+    B -->|"No"| C[Generate Key Pair]
+    B -->|"Yes"| D[Get Shared Key]
     C --> D
-    D --> E[Listen for Message via LoRa]
-    E --> F{LoRa Available?}
-    F -->|No| G[Error: LoRa Unavailable]
-    F -->|Yes| H[Receive IV + Encrypted Message]
+    D --> E[Listen for Message]
+    E --> F{Transport Available?}
+    F -->|"No"| G[Error: Transport Unavailable]
+    F -->|"Yes"| H[Receive IV + Encrypted Message]
     H --> I{Message Received?}
-    I -->|No| J[Error: No Message]
-    I -->|Yes| K{Extract IV}
+    I -->|"No"| J[Error: No Message]
+    I -->|"Yes"| K{Extract IV}
     K --> L{Initialize AES-CBC}
-    L -->|Key: Shared Key, IV| M[Decrypt Message]
+    L -->|"Key: Shared Key, IV"| M[Decrypt Message]
     M --> N{Decryption Success?}
-    N -->|No| O[Error: Decryption Failed]
-    N -->|Yes| P[Remove PKCS#7 Padding]
+    N -->|"No"| O[Error: Decryption Failed]
+    N -->|"Yes"| P[Remove PKCS#7 Padding]
     P --> Q[Output Decrypted Message]
     Q --> R[Clean Keys]
     R --> S[End]
@@ -110,15 +110,14 @@ flowchart TD
      ```bash
      esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash -z 0x1000 esp32.bin
      ```
-2. **Upload UECDH and LoRa Library**:
-   - Copy `uecdh.py` and `ulora.py` to ESP32 using `ampy`:
+2. **Upload UECDH**:
+   - Copy `uecdh.py` to ESP32 using `ampy`:
      ```bash
      ampy --port /dev/ttyUSB0 put uecdh.py
-     ampy --port /dev/ttyUSB0 put ulora.py
      ```
 
-### IoT Use Case: Secure Messaging Between ESP32 Devices over LoRa
-This example demonstrates secure communication between a **Sender** and **Receiver** ESP32 using LoRa. The Sender exchanges keys with the Receiver, computes a shared key, encrypts a message with AES-CBC, and sends it over LoRa. The Receiver decrypts and displays the message.
+### IoT Use Case: Secure Messaging Between ESP32 Devices (LoRa Example)
+This example demonstrates how UECDH can be used for secure communication between a **Sender** and **Receiver** ESP32 over LoRa. The Sender exchanges keys with the Receiver, computes a shared key, encrypts a message with AES-CBC, and sends it. The Receiver decrypts and displays the message. Note that this is just one application; UECDH can be used with any protocol by adapting the transport layer.
 
 #### Sender Code (sender.py)
 ```python
@@ -231,8 +230,9 @@ if __name__ == "__main__":
         print(f"Exception: {e}")
         print("Please check the wiring, LoRa module configuration, or UECDH errors.")
 ```
-![Sender  ](./Docs/imgs/tests/Sender-LoRa.png)
+> **Note**: This example uses LoRa for communication, but you can replace `ULoRa` with any other transport mechanism (e.g., Wi-Fi or Bluetooth) by modifying the send/receive logic.
 
+![Sender](./Docs/imgs/tests/Sender-LoRa.png)
 
 #### Receiver Code (receiver.py)
 ```python
@@ -334,26 +334,27 @@ if __name__ == "__main__":
         print(f"Exception: {e}")
         print("Please check the wiring, LoRa module configuration, or UECDH errors.")
 ```
-![Receiver ](./Docs/imgs/tests/Receiver-LoRa.png)
+> **Note**: This example uses LoRa, but UECDH is not limited to LoRa. Adapt the transport layer for other protocols as needed.
 
+![Receiver](./Docs/imgs/tests/Receiver-LoRa.png)
 
 #### Setup Instructions
-1. **Configure LoRa Module**:
-   - Connect LoRa modules (e.g., SX127x) to the specified pins on both ESP32 devices as defined in `sender.py` and `receiver.py`. Note that Sender and Receiver use different pin configurations.
-   - Verify that the SPI pins (`sck`, `mosi`, `miso`) and control pins (`ss`, `reset`, `dio0`) match your hardware setup.
-   - Ensure both LoRa modules are configured to operate on the same frequency (e.g., 433 MHz as specified in `sender.py`) and have matching LoRa parameters (e.g., bandwidth, spreading factor).
+1. **Configure Communication Module**:
+   - For the LoRa example, connect LoRa modules (e.g., SX127x) to the specified pins on both ESP32 devices as defined in `sender.py` and `receiver.py`. Note that Sender and Receiver use different pin configurations.
+   - For other protocols, configure the appropriate hardware (e.g., Wi-Fi module, Bluetooth) and update the send/receive logic in the scripts.
+   - Verify that the communication modules are configured to operate with matching parameters (e.g., frequency, bandwidth for LoRa).
 2. **Upload Files**:
-   - Upload `uecdh.py`, `ulora.py`, `sender.py`, and `receiver.py` to the respective ESP32 devices using `ampy`:
+   - Upload `uecdh.py`, and for the LoRa example, `ulora.py`, `sender.py`, and `receiver.py` to the respective ESP32 devices using `ampy`:
      ```bash
      ampy --port /dev/ttyUSB0 put uecdh.py
-     ampy --port /dev/ttyUSB0 put ulora.py  #  For LoRa 
+     ampy --port /dev/ttyUSB0 put ulora.py  # For LoRa example
      ampy --port /dev/ttyUSB0 put sender.py  # For Sender
      ampy --port /dev/ttyUSB1 put receiver.py  # For Receiver
      ```
 3. **Run the Scripts**:
    - Run `sender.py` on the Sender ESP32 to initiate the key exchange process.
    - Run `receiver.py` on the Receiver ESP32 to respond and complete the key exchange.
-   - Ensure LoRa modules are within communication range (typically up to several kilometers in open areas) and powered correctly.
+   - Ensure communication modules are within range and powered correctly.
 
 #### Expected Output
 **Sender**:
@@ -407,33 +408,32 @@ Run tests:
 ```python
 from tests.uint import test
 ```
-![Unit Tests ](./Docs/imgs/tests/test.png)
-
+![Unit Tests](./Docs/imgs/tests/test.png)
 
 ### Security Considerations
 - **SHA256 Limitation**: UECDH uses SHA256 due to MicroPython’s lack of elliptic curve support, which is less secure than Curve25519.
 - **AES-CBC**: The example uses CBC mode with a random IV for improved security over ECB. Ensure the IV is never reused with the same key.
 - **Randomness**: Ensure `urandom` is properly seeded on ESP32 for secure IV and key generation.
-- **LoRa Security**: LoRa does not provide inherent encryption; UECDH secures payloads, but consider authentication to prevent Man-in-the-Middle attacks.
+- **Transport Security**: UECDH secures payloads, but the underlying protocol (e.g., LoRa, Wi-Fi) may require additional authentication to prevent Man-in-the-Middle attacks.
 
 ### References
 - NIST SP 800-56A Rev. 3 (2020)
 - NIST SP 800-90A Rev. 1 (2015)
 - FIPS 180-4 (2015)
-- ISO/IEC 25533-3 (2018)
+- ISO/IEC 18033-3 (2010)
 
 ---
 
 ## Persian (فارسی)
 
 ### معرفی
-**UECDH** یک کتابخانه سبک و استاندارد برای تبادل کلید ECDH در MicroPython است که برای دستگاه‌های IoT با منابع محدود مانند ESP32 بهینه شده است. این کتابخانه امکان تبادل کلید امن و ارسال پیام‌های رمز شده را به طور اختصاصی از طریق پروتکل LoRa با استفاده از AES-CBC و پدینگ PKCS#7 فراهم می‌کند و برای برنامه‌های IoT که نیاز به ارتباط دوربرد، کم‌مصرف، و امن دارند، ایده‌آل است. این کتابخانه با استانداردهای زیر سازگار است:
+**UECDH** یک کتابخانه سبک و استاندارد برای تبادل کلید ECDH در MicroPython است که برای دستگاه‌های IoT با منابع محدود مانند ESP32 بهینه شده است. این کتابخانه امکان تبادل کلید امن را برای هر پروتکل ارتباطی، از جمله LoRa، Wi-Fi، Bluetooth یا پروتکل‌های سفارشی، فراهم می‌کند و از SHA256 برای استخراج کلید به دلیل نبود پشتیبانی از منحنی‌های بیضوی در MicroPython استفاده می‌کند. این کتابخانه برای برنامه‌های IoT که نیاز به ارتباط امن و کم‌مصرف دارند، ایده‌آل است و با استانداردهای زیر سازگار است:
 - **NIST SP 800-56A Rev. 3 (2020)**: توافق کلید ECDH.
 - **NIST SP 800-90A Rev. 1 (2015)**: تولید اعداد تصادفی.
 - **FIPS 180-4 (2015)**: تابع هش SHA256.
-- **ISO/IEC 25533-3 (2018)**: رمزنگاری نامتقارن.
+- **ISO/IEC 18033-3 (2010)**: الزامات رمزنگاری کلید عمومی.
 
-این README شامل مثالی کامل برای ارتباط امن بین دو دستگاه ESP32 (فرستنده و گیرنده) با استفاده از تبادل کلید و رمزنگاری AES-CBC از طریق LoRa است.
+این README شامل مثالی برای ارتباط امن بین دو دستگاه ESP32 (فرستنده و گیرنده) با استفاده از LoRa و رمزنگاری AES-CBC با پدینگ PKCS#7 است. با این حال، UECDH به پروتکل خاصی محدود نیست و می‌تواند برای هر رسانه ارتباطی با تغییر لایه انتقال استفاده شود.
 
 ### ویژگی‌ها
 | ویژگی | توضیحات |
@@ -442,7 +442,7 @@ from tests.uint import test
 | ⏱ **زمان ثابت** | جلوگیری از حملات زمان‌بندی با عملیات زمان ثابت. |
 | 🗑 **پاک‌سازی امن** | پاک‌سازی کلیدها برای جلوگیری از نشت. |
 | 📏 **بهینه برای ESP32** | مصرف کم حافظه و CPU برای IoT. |
-| 🌐 **سازگاری با LoRa** | بهینه شده برای ارتباط LoRa با AES-CBC. |
+| 🌐 **مستقل از پروتکل** | سازگار با هر پروتکل ارتباطی (مانند LoRa، Wi-Fi، Bluetooth). |
 | ✅ **مجموعه تست** | تست‌های جامع برای اطمینان از قابلیت اطمینان. |
 
 ### فلوچارت‌ها
@@ -475,20 +475,20 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[شروع] --> B{کلید موجود؟}
-    B -->|خیر| C[تولید جفت کلید]
-    B -->|بله| D[دریافت کلید مشترک]
+    B -->|"خیر"| C[تولید جفت کلید]
+    B -->|"بله"| D[دریافت کلید مشترک]
     C --> D
     D --> E[آماده‌سازی پیام]
     E --> F[افزودن پدینگ PKCS#7]
     F --> G{تولید IV}
     G --> H{مقداردهی اولیه AES-CBC}
-    H -->|کلید: کلید مشترک، IV| I[رمزنگاری پیام]
+    H -->|"کلید: کلید مشترک، IV"| I[رمزنگاری پیام]
     I --> J{رمزنگاری موفق؟}
-    J -->|خیر| K[خطا: رمزنگاری ناموفق]
-    J -->|بله| L[ارسال IV + پیام رمز شده از طریق LoRa]
-    L --> M{LoRa در دسترس؟}
-    M -->|خیر| N[خطا: LoRa در دسترس نیست]
-    M -->|بله| O[ارسال پیام]
+    J -->|"خیر"| K[خطا: رمزنگاری ناموفق]
+    J -->|"بله"| L[ارسال IV + پیام رمز شده]
+    L --> M{انتقال در دسترس؟}
+    M -->|"خیر"| N[خطا: انتقال در دسترس نیست]
+    M -->|"بله"| O[ارسال پیام]
     O --> P[پاک‌سازی کلیدها]
     P --> Q[پایان]
 ```
@@ -497,21 +497,21 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[شروع] --> B{کلید موجود؟}
-    B -->|خیر| C[تولید جفت کلید]
-    B -->|بله| D[دریافت کلید مشترک]
+    B -->|"خیر"| C[تولید جفت کلید]
+    B -->|"بله"| D[دریافت کلید مشترک]
     C --> D
-    D --> E[گوش دادن برای پیام از طریق LoRa]
-    E --> F{LoRa در دسترس؟}
-    F -->|خیر| G[خطا: LoRa در دسترس نیست]
-    F -->|بله| H[دریافت IV + پیام رمز شده]
+    D --> E[گوش دادن برای پیام]
+    E --> F{انتقال در دسترس؟}
+    F -->|"خیر"| G[خطا: انتقال در دسترس نیست]
+    F -->|"بله"| H[دریافت IV + پیام رمز شده]
     H --> I{پیام دریافت شد؟}
-    I -->|خیر| J[خطا: بدون پیام]
-    I -->|بله| K{استخراج IV}
+    I -->|"خیر"| J[خطا: بدون پیام]
+    I -->|"بله"| K{استخراج IV}
     K --> L{مقداردهی اولیه AES-CBC}
-    L -->|کلید: کلید مشترک، IV| M[رمزگشایی پیام]
+    L -->|"کلید: کلید مشترک، IV"| M[رمزگشایی پیام]
     M --> N{رمزگشایی موفق؟}
-    N -->|خیر| O[خطا: رمزگشایی ناموفق]
-    N -->|بله| P[حذف پدینگ PKCS#7]
+    N -->|"خیر"| O[خطا: رمزگشایی ناموفق]
+    N -->|"بله"| P[حذف پدینگ PKCS#7]
     P --> Q[نمایش پیام رمزگشایی شده]
     Q --> R[پاک‌سازی کلیدها]
     R --> S[پایان]
@@ -524,15 +524,14 @@ flowchart TD
      ```bash
      esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash -z 0x1000 esp32.bin
      ```
-2. **آپلود UECDH و کتابخانه LoRa**:
-   - فایل‌های `uecdh.py` و `ulora.py` را با `ampy` آپلود کنید:
+2. **آپلود UECDH**:
+   - فایل `uecdh.py` را با `ampy` آپلود کنید:
      ```bash
      ampy --port /dev/ttyUSB0 put uecdh.py
-     ampy --port /dev/ttyUSB0 put ulora.py
      ```
 
-### کاربرد در IoT: ارسال و دریافت پیام امن بین ESP32ها از طریق LoRa
-این مثال نشان می‌دهد چگونه دو دستگاه ESP32 (فرستنده و گیرنده) می‌توانند با استفاده از UECDH کلید مشترک تولید کنند، پیام را با AES-CBC رمزنگاری کنند، و آن را از طریق LoRa ارسال و دریافت کنند.
+### کاربرد در IoT: ارسال و دریافت پیام امن بین ESP32ها (مثال LoRa)
+این مثال نشان می‌دهد چگونه UECDH می‌تواند برای ارتباط امن بین یک **فرستنده** و **گیرنده** ESP32 از طریق LoRa استفاده شود. فرستنده کلیدها را با گیرنده تبادل می‌کند، کلید مشترک را محاسبه می‌کند، پیام را با AES-CBC رمزنگاری می‌کند و ارسال می‌کند. گیرنده پیام را رمزگشایی و نمایش می‌دهد. توجه داشته باشید که این تنها یک کاربرد است؛ UECDH می‌تواند با هر پروتکلی با تغییر لایه انتقال استفاده شود.
 
 #### کد فرستنده (sender.py)
 ```python
@@ -645,6 +644,7 @@ if __name__ == "__main__":
         print(f"Exception: {e}")
         print("Please check the wiring, LoRa module configuration, or UECDH errors.")
 ```
+> **توجه**: این مثال از LoRa برای ارتباط استفاده می‌کند، اما می‌توانید `ULoRa` را با هر مکانیزم انتقال دیگر (مانند Wi-Fi یا Bluetooth) جایگزین کنید با تغییر منطق ارسال/دریافت.
 
 #### کد گیرنده (receiver.py)
 ```python
@@ -746,14 +746,15 @@ if __name__ == "__main__":
         print(f"Exception: {e}")
         print("Please check the wiring, LoRa module configuration, or UECDH errors.")
 ```
+> **توجه**: این مثال از LoRa استفاده می‌کند، اما UECDH به LoRa محدود نیست. لایه انتقال را برای پروتکل‌های دیگر به‌روزرسانی کنید.
 
 #### دستورالعمل راه‌اندازی
-1. **پیکربندی ماژول LoRa**:
-   - ماژول‌های LoRa (مانند SX127x) را به پین‌های مشخص شده در فایل‌های `sender.py` و `receiver.py` روی هر دو دستگاه ESP32 متصل کنید. توجه کنید که فرستنده و گیرنده از پیکربندی پین‌های متفاوتی استفاده می‌کنند.
-   - اطمینان حاصل کنید که پین‌های SPI (`sck`، `mosi`، `miso`) و پین‌های کنترلی (`ss`، `reset`، `dio0`) با تنظیمات سخت‌افزاری شما مطابقت دارند.
-   - هر دو ماژول LoRa را برای کار در فرکانس یکسان (مانند 433 مگاهرتز طبق `sender.py`) و با پارامترهای LoRa یکسان (مانند پهنای باند، فاکتور پخش) پیکربندی کنید.
+1. **پیکربندی ماژول ارتباطی**:
+   - برای مثال LoRa، ماژول‌های LoRa (مانند SX127x) را به پین‌های مشخص شده در `sender.py` و `receiver.py` روی هر دو دستگاه ESP32 متصل کنید. توجه کنید که فرستنده و گیرنده از پیکربندی پین‌های متفاوتی استفاده می‌کنند.
+   - برای پروتکل‌های دیگر، سخت‌افزار مناسب (مانند ماژول Wi-Fi یا Bluetooth) را پیکربندی کنید و منطق ارسال/دریافت را در اسکریپت‌ها به‌روزرسانی کنید.
+   - اطمینان حاصل کنید که ماژول‌های ارتباطی با پارامترهای یکسان (مانند فرکانس، پهنای باند برای LoRa) پیکربندی شده‌اند.
 2. **آپلود فایل‌ها**:
-   - فایل‌های `uecdh.py`، `ulora.py`، `sender.py` و `receiver.py` را به دستگاه‌های مربوطه با استفاده از `ampy` آپلود کنید:
+   - فایل‌های `uecdh.py` و برای مثال LoRa، فایل‌های `ulora.py`، `sender.py` و `receiver.py` را به دستگاه‌های مربوطه با استفاده از `ampy` آپلود کنید:
      ```bash
      ampy --port /dev/ttyUSB0 put uecdh.py
      ampy --port /dev/ttyUSB0 put ulora.py
@@ -763,7 +764,7 @@ if __name__ == "__main__":
 3. **اجرای اسکریپت‌ها**:
    - اسکریپت `sender.py` را روی ESP32 فرستنده اجرا کنید تا فرآیند تبادل کلید آغاز شود.
    - اسکریپت `receiver.py` را روی ESP32 گیرنده اجرا کنید تا پاسخ دهد و تبادل کلید کامل شود.
-   - اطمینان حاصل کنید که ماژول‌های LoRa در محدوده ارتباطی (معمولاً تا چند کیلومتر در مناطق باز) قرار دارند و به درستی تغذیه می‌شوند.
+   - اطمینان حاصل کنید که ماژول‌های ارتباطی در محدوده ارتباطی قرار دارند و به درستی تغذیه می‌شوند.
 
 #### خروجی مورد انتظار
 **فرستنده**:
@@ -816,18 +817,17 @@ Decrypted message: Hello From Arman Ghobadi
 اجرای تست‌ها:
 ```python
 from tests.uint import test
-
 ```
-![Unit Tests ](./Docs/imgs/tests/test.png)
+![Unit Tests](./Docs/imgs/tests/test.png)
 
 ### ملاحظات امنیتی
 - **محدودیت SHA256**: به دلیل عدم پشتیبانی MicroPython از منحنی‌های بیضوی، از SHA256 استفاده شده که نسبت به ECDH واقعی (مانند Curve25519) امنیت کمتری دارد.
 - **AES-CBC**: این مثال از حالت CBC با IV تصادفی برای امنیت بالاتر نسبت به ECB استفاده می‌کند. اطمینان حاصل کنید که IV هرگز با یک کلید یکسان بازاستفاده نشود.
 - **تصادفی بودن**: اطمینان حاصل کنید که `urandom` روی ESP32 به‌درستی مقداردهی شده است برای تولید IV و کلیدهای امن.
-- **امنیت LoRa**: LoRa به طور ذاتی رمزنگاری ندارد؛ UECDH داده‌ها را ایمن می‌کند، اما احراز هویت را برای جلوگیری از حملات Man-in-the-Middle در نظر بگیرید.
+- **امنیت انتقال**: UECDH داده‌ها را ایمن می‌کند، اما پروتکل زیرین (مانند LoRa، Wi-Fi) ممکن است نیاز به احراز هویت اضافی برای جلوگیری از حملات Man-in-the-Middle داشته باشد.
 
 ### منابع
 - NIST SP 800-56A Rev. 3 (2020)
 - NIST SP 800-90A Rev. 1 (2015)
 - FIPS 180-4 (2015)
-- ISO/IEC 25533-3 (2018)
+- ISO/IEC 18033-3 (2010)
