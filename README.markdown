@@ -31,78 +31,7 @@ This README includes an IoT example demonstrating secure communication between *
 | 🌐 **Protocol-Agnostic** | Compatible with any communication protocol (e.g., LoRa, Wi-Fi, Bluetooth). |
 | ✅ **Test Suite** | Comprehensive tests for reliability. |
 
-### Flowcharts
-The following flowcharts illustrate the key processes in UECDH:
 
-#### Key Exchange Process
-```mermaid
-flowchart TD
-    flowchart TD
-    A[Start] --> B{Generate Key Pair}
-    B -->|"Private Key"| C[Random(n)]
-    B -->|"Public Key"| D[SHA256(Private Key)[0:n]]
-    C --> E{Valid Key?}
-    D --> E
-    E -->|"No"| F[Retry (up to 3 times)]
-    E -->|"Yes"| G[Timestamp Key]
-    F -->|"Fail"| H[Error: Weak Key]
-    G --> I[Send Public Key]
-    I --> J[Receive Peer Public Key]
-    J --> K{Validate Peer Key}
-    K -->|"Invalid"| L[Error: Invalid Key]
-    K -->|"Valid"| M[Compute Shared Key]
-    M --> N[SHA256(min(pub1, pub2) || max(pub1, pub2))[0:n]]
-    N --> O{Valid Shared Key?}
-    O -->|"No"| P[Error: Weak Shared Key]
-    O -->|"Yes"| Q[Return Shared Key]
-    Q --> R[End]
-```
-
-#### Sender Process (Encryption and Sending)
-```mermaid
-flowchart TD
-    A[Start] --> B{Key Available?}
-    B -->|"No"| C[Generate Key Pair]
-    B -->|"Yes"| D[Get Shared Key]
-    C --> D
-    D --> E[Prepare Message]
-    E --> F[Add PKCS#7 Padding]
-    F --> G{Generate IV}
-    G --> H{Initialize AES-CBC}
-    H -->|"Key: Shared Key, IV"| I[Encrypt Message]
-    I --> J{Encryption Success?}
-    J -->|"No"| K[Error: Encryption Failed]
-    J -->|"Yes"| L[Send IV + Encrypted Message]
-    L --> M{Transport Available?}
-    M -->|"No"| N[Error: Transport Unavailable]
-    M -->|"Yes"| O[Transmit Message]
-    O --> P[Clean Keys]
-    P --> Q[End]
-```
-
-#### Receiver Process (Receiving and Decryption)
-```mermaid
-flowchart TD
-    A[Start] --> B{Key Available?}
-    B -->|"No"| C[Generate Key Pair]
-    B -->|"Yes"| D[Get Shared Key]
-    C --> D
-    D --> E[Listen for Message]
-    E --> F{Transport Available?}
-    F -->|"No"| G[Error: Transport Unavailable]
-    F -->|"Yes"| H[Receive IV + Encrypted Message]
-    H --> I{Message Received?}
-    I -->|"No"| J[Error: No Message]
-    I -->|"Yes"| K{Extract IV}
-    K --> L{Initialize AES-CBC}
-    L -->|"Key: Shared Key, IV"| M[Decrypt Message]
-    M --> N{Decryption Success?}
-    N -->|"No"| O[Error: Decryption Failed]
-    N -->|"Yes"| P[Remove PKCS#7 Padding]
-    P --> Q[Output Decrypted Message]
-    Q --> R[Clean Keys]
-    R --> S[End]
-```
 
 ### Installation
 1. **Flash MicroPython** on ESP32:
@@ -425,7 +354,7 @@ from tests.uint import test
 
 ---
 
-## Persian (فارسی)
+## persian
 
 ### معرفی
 **UECDH** یک کتابخانه سبک و استاندارد برای تبادل کلید ECDH در MicroPython است که برای دستگاه‌های IoT با منابع محدود مانند ESP32 بهینه شده است. این کتابخانه امکان تبادل کلید امن را برای هر پروتکل ارتباطی، از جمله LoRa، Wi-Fi، Bluetooth یا پروتکل‌های سفارشی، فراهم می‌کند و از SHA256 برای استخراج کلید به دلیل نبود پشتیبانی از منحنی‌های بیضوی در MicroPython استفاده می‌کند. این کتابخانه برای برنامه‌های IoT که نیاز به ارتباط امن و کم‌مصرف دارند، ایده‌آل است و با استانداردهای زیر سازگار است:
@@ -446,77 +375,6 @@ from tests.uint import test
 | 🌐 **مستقل از پروتکل** | سازگار با هر پروتکل ارتباطی (مانند LoRa، Wi-Fi، Bluetooth). |
 | ✅ **مجموعه تست** | تست‌های جامع برای اطمینان از قابلیت اطمینان. |
 
-### فلوچارت‌ها
-فلوچارت‌های زیر فرآیندهای کلیدی در UECDH را نشان می‌دهند:
-
-#### فرآیند تبادل کلید
-```mermaid
-flowchart TD
-    A[شروع] --> B{تولید جفت کلید}
-    B -->|"کلید خصوصی"| C[تصادفی(n)]
-    B -->|"کلید عمومی"| D[SHA256(کلید خصوصی)[0:n]]
-    C --> E{کلید معتبر؟}
-    D --> E
-    E -->|"خیر"| F[تلاش مجدد (تا 3 بار)]
-    E -->|"بله"| G[ثبت زمان کلید]
-    F -->|"شکست"| H[خطا: کلید ضعیف]
-    G --> I[ارسال کلید عمومی]
-    I --> J[دریافت کلید عمومی همتا]
-    J --> K{اعتبارسنجی کلید همتا}
-    K -->|"نامعتبر"| L[خطا: کلید نامعتبر]
-    K -->|"معتبر"| M[محاسبه کلید مشترک]
-    M --> N[SHA256(min(pub1, pub2) || max(pub1, pub2))[0:n]]
-    N --> O{کلید مشترک معتبر؟}
-    O -->|"خیر"| P[خطا: کلید مشترک ضعیف]
-    O -->|"بله"| Q[بازگرداندن کلید مشترک]
-    Q --> R[پایان]
-```
-
-#### فرآیند فرستنده (رمزنگاری و ارسال)
-```mermaid
-flowchart TD
-    A[شروع] --> B{کلید موجود؟}
-    B -->|"خیر"| C[تولید جفت کلید]
-    B -->|"بله"| D[دریافت کلید مشترک]
-    C --> D
-    D --> E[آماده‌سازی پیام]
-    E --> F[افزودن پدینگ PKCS#7]
-    F --> G{تولید IV}
-    G --> H{مقداردهی اولیه AES-CBC}
-    H -->|"کلید: کلید مشترک، IV"| I[رمزنگاری پیام]
-    I --> J{رمزنگاری موفق؟}
-    J -->|"خیر"| K[خطا: رمزنگاری ناموفق]
-    J -->|"بله"| L[ارسال IV + پیام رمز شده]
-    L --> M{انتقال در دسترس؟}
-    M -->|"خیر"| N[خطا: انتقال در دسترس نیست]
-    M -->|"بله"| O[ارسال پیام]
-    O --> P[پاک‌سازی کلیدها]
-    P --> Q[پایان]
-```
-
-#### فرآیند گیرنده (دریافت و رمزگشایی)
-```mermaid
-flowchart TD
-    A[شروع] --> B{کلید موجود؟}
-    B -->|"خیر"| C[تولید جفت کلید]
-    B -->|"بله"| D[دریافت کلید مشترک]
-    C --> D
-    D --> E[گوش دادن برای پیام]
-    E --> F{انتقال در دسترس؟}
-    F -->|"خیر"| G[خطا: انتقال در دسترس نیست]
-    F -->|"بله"| H[دریافت IV + پیام رمز شده]
-    H --> I{پیام دریافت شد؟}
-    I -->|"خیر"| J[خطا: بدون پیام]
-    I -->|"بله"| K{استخراج IV}
-    K --> L{مقداردهی اولیه AES-CBC}
-    L -->|"کلید: کلید مشترک، IV"| M[رمزگشایی پیام]
-    M --> N{رمزگشایی موفق؟}
-    N -->|"خیر"| O[خطا: رمزگشایی ناموفق]
-    N -->|"بله"| P[حذف پدینگ PKCS#7]
-    P --> Q[نمایش پیام رمزگشایی شده]
-    Q --> R[پاک‌سازی کلیدها]
-    R --> S[پایان]
-```
 
 ### نصب
 1. **نصب MicroPython** روی ESP32:
