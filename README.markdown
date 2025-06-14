@@ -51,7 +51,7 @@ flowchart TD
     J --> K{Validate Peer Key}
     K -->|"Invalid"| L[Error: Invalid Key]
     K -->|"Valid"| M[Compute Shared Key]
-    M --> N[SHA256(Combined Public Keys)[0:n]]
+    M --> N[SHA256(min(pub1, pub2) || max(pub1, pub2))[0:n]]
     N --> O{Valid Shared Key?}
     O -->|"No"| P[Error: Weak Shared Key]
     O -->|"Yes"| Q[Return Shared Key]
