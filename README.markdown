@@ -38,22 +38,22 @@ The following flowcharts illustrate the key processes in UECDH:
 ```mermaid
 flowchart TD
     A[Start] --> B{Generate Key Pair}
-    B -->|Private Key| C[Random(n)]
-    B -->|Public Key| D[SHA256(Private Key)[0:n]]
+    B -->|"Private Key"| C[Random(n)]
+    B -->|"Public Key"| D[SHA256(Private Key)[0:n]]
     C --> E{Valid Key?}
     D --> E
-    E -->|No| F[Retry (up to 3 times)]
-    E -->|Yes| G[Timestamp Key]
-    F -->|Fail| H[Error: Weak Key]
+    E -->|"No"| F[Retry (up to 3 times)]
+    E -->|"Yes"| G[Timestamp Key]
+    F -->|"Fail"| H[Error: Weak Key]
     G --> I[Send Public Key]
     I --> J[Receive Peer Public Key]
     J --> K{Validate Peer Key}
-    K -->|Invalid| L[Error: Invalid Key]
-    K -->|Valid| M[Compute Shared Key]
+    K -->|"Invalid"| L[Error: Invalid Key]
+    K -->|"Valid"| M[Compute Shared Key]
     M --> N[SHA256(min(pub1, pub2) || max(pub1, pub2))[0:n]]
     N --> O{Valid Shared Key?}
-    O -->|No| P[Error: Weak Shared Key]
-    O -->|Yes| Q[Return Shared Key]
+    O -->|"No"| P[Error: Weak Shared Key]
+    O -->|"Yes"| Q[Return Shared Key]
     Q --> R[End]
 ```
 
@@ -452,22 +452,22 @@ from tests.uint import test
 ```mermaid
 flowchart TD
     A[شروع] --> B{تولید جفت کلید}
-    B -->|کلید خصوصی| C[تصادفی(n)]
-    B -->|کلید عمومی| D[SHA256(کلید خصوصی)[0:n]]
+    B -->|"کلید خصوصی"| C[تصادفی(n)]
+    B -->|"کلید عمومی"| D[SHA256(کلید خصوصی)[0:n]]
     C --> E{کلید معتبر؟}
     D --> E
-    E -->|خیر| F[تلاش مجدد (تا 3 بار)]
-    E -->|بله| G[ثبت زمان کلید]
-    F -->|شکست| H[خطا: کلید ضعیف]
+    E -->|"خیر"| F[تلاش مجدد (تا 3 بار)]
+    E -->|"بله"| G[ثبت زمان کلید]
+    F -->|"شکست"| H[خطا: کلید ضعیف]
     G --> I[ارسال کلید عمومی]
     I --> J[دریافت کلید عمومی همتا]
     J --> K{اعتبارسنجی کلید همتا}
-    K -->|نامعتبر| L[خطا: کلید نامعتبر]
-    K -->|معتبر| M[محاسبه کلید مشترک]
+    K -->|"نامعتبر"| L[خطا: کلید نامعتبر]
+    K -->|"معتبر"| M[محاسبه کلید مشترک]
     M --> N[SHA256(min(pub1, pub2) || max(pub1, pub2))[0:n]]
     N --> O{کلید مشترک معتبر؟}
-    O -->|خیر| P[خطا: کلید مشترک ضعیف]
-    O -->|بله| Q[بازگرداندن کلید مشترک]
+    O -->|"خیر"| P[خطا: کلید مشترک ضعیف]
+    O -->|"بله"| Q[بازگرداندن کلید مشترک]
     Q --> R[پایان]
 ```
 
