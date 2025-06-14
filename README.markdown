@@ -1,6 +1,6 @@
 # UECDH: Ultra ECDH Key Exchange Library 🚀🔒
 
-![GitHub](https://img.shields.io/github/license/xai/uecdh) ![MicroPython](https://img.shields.io/badge/MicroPython-v1.19+-blue) ![ESP32](https://img.shields.io/badge/ESP32-Supported-green) ![IoT](https://img.shields.io/badge/IoT-Secure-yellow)
+ ![MicroPython](https://img.shields.io/badge/MicroPython-v1.19+-blue) ![ESP32](https://img.shields.io/badge/ESP32-Supported-green) ![IoT](https://img.shields.io/badge/IoT-Secure-yellow)
 
 ![UECDH](./Docs/imgs/logo/logo.png)
 
