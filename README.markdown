@@ -1,5 +1,4 @@
 # UECDH: Ultra ECDH Key Exchange Library 🚀🔒
-# UECDH: Ultra ECDH Key Exchange Library 🚀🔒
 
 ![MicroPython](https://img.shields.io/badge/MicroPython-v1.19+-blue) ![ESP32](https://img.shields.io/badge/ESP32-Supported-green) ![IoT](https://img.shields.io/badge/IoT-Secure-yellow)
 
@@ -40,7 +39,7 @@ Designed for ESP32 and any resource-constrained IoT device that needs secure eph
 | **Hardware RNG**               | Uses ESP32 TRNG via `urandom.getrandbits()`                                                          |
 | **Test suite**                 | 7 automated tests covering every edge case – **100 % pass**                                          |
 
-![test](./Docs/imgs/tests/test.png)
+
 
 ### Installation
 1. **Flash MicroPython** on ESP32:
