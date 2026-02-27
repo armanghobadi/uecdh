@@ -5,7 +5,7 @@ import gc
 
 
 def run_tests():
-    print("=== UECDH v2.0.0 Test Suite ===")
+    print("=== UECDH v2.2.0-FINAL Test Suite ===")
     passed = 0
     failed = 0
 
@@ -42,39 +42,57 @@ def run_tests():
         failed += 1
 
     # -------------------------------------------------------------
-    # Test 2: Public Key Validation
+    # Test 2: Low-order Point Protection (RFC 7748 security)
     # -------------------------------------------------------------
     try:
+        # 2a: All-zero public key → must be rejected in compute_shared_key
         alice = UECDH()
-        _, pub_a = alice.generate_keypair()
-
-        # 2a: Zero key
+        alice.generate_keypair()
+        alice.set_peer_public_key(b'\x00' * 32)
         try:
-            alice.set_peer_public_key(b'\x00' * 32)
-            print("Test 2a: FAILED")
+            alice.compute_shared_key()
+            print("Test 2a: FAILED (zero key not rejected)")
             failed += 1
-        except ValueError:
-            print("Test 2a: Zero key rejected - PASSED")
+        except ValueError as e:
+            if "low-order" in str(e).lower() or "invalid shared secret" in str(e).lower():
+                print("Test 2a: Zero public key rejected (low-order protection) - PASSED")
+                passed += 1
+            else:
+                print(f"Test 2a: FAILED (wrong error: {e})")
+                failed += 1
 
-        # 2b: Low-order point
+        # 2b: Known low-order point (u=1) → must be rejected
+        alice = UECDH()
+        alice.generate_keypair()
+        alice.set_peer_public_key(b'\x01' + b'\x00' * 31)
         try:
-            alice.set_peer_public_key(b'\x01' + b'\x00' * 31)
-            print("Test 2b: FAILED")
+            alice.compute_shared_key()
+            print("Test 2b: FAILED (low-order point not rejected)")
             failed += 1
-        except ValueError:
-            print("Test 2b: Low-order point rejected - PASSED")
+        except ValueError as e:
+            if "low-order" in str(e).lower() or "invalid shared secret" in str(e).lower():
+                print("Test 2b: Low-order point rejected - PASSED")
+                passed += 1
+            else:
+                print(f"Test 2b: FAILED (wrong error: {e})")
+                failed += 1
 
-        # 2c: Invalid encoding
-        bad = bytearray(pub_a)
-        bad[0] |= 0x07
+        # 2c: Non-canonical encoding (low 3 bits set) → accepted per RFC 7748
+        alice = UECDH()
+        bob = UECDH()
+        _, pub_b = bob.generate_keypair()
+        bad = bytearray(pub_b)
+        bad[0] |= 0x07                     # non-canonical but valid
+        alice.generate_keypair()
+        alice.set_peer_public_key(bytes(bad))
         try:
-            alice.set_peer_public_key(bytes(bad))
-            print("Test 2c: FAILED")
+            key = alice.compute_shared_key()
+            print("Test 2c: Non-canonical pubkey accepted (per RFC 7748) - PASSED")
+            passed += 1
+        except Exception as e:
+            print(f"Test 2c: FAILED ({e})")
             failed += 1
-        except ValueError:
-            print("Test 2c: Invalid encoding rejected - PASSED")
 
-        passed += 1
     except Exception as e:
         print(f"Test 2: FAILED ({e})")
         failed += 1
@@ -93,7 +111,7 @@ def run_tests():
             print("Test 3: FAILED")
             failed += 1
         except RuntimeError as e:
-            if "expired" in str(e):
+            if "expired" in str(e).lower():
                 print("Test 3: Key expired correctly - PASSED")
                 passed += 1
             else:
@@ -121,7 +139,7 @@ def run_tests():
         failed += 1
 
     # -------------------------------------------------------------
-    # Test 5: Custom HKDF
+    # Test 5: Custom HKDF params (RFC 5869)
     # -------------------------------------------------------------
     try:
         alice = UECDH()
@@ -134,7 +152,7 @@ def run_tests():
 
         key1 = alice.compute_shared_key(salt=b"salt", info=b"info")
         key2 = bob.compute_shared_key(salt=b"salt", info=b"info")
-        key3 = alice.compute_shared_key()
+        key3 = alice.compute_shared_key()   # default info
 
         if key1 == key2 and key1 != key3:
             print("Test 5: Custom HKDF params - PASSED")
@@ -147,7 +165,7 @@ def run_tests():
         failed += 1
 
     # -------------------------------------------------------------
-    # Test 6: Variable Key Lengths – FIXED: Only check length
+    # Test 6: Variable Key Lengths
     # -------------------------------------------------------------
     try:
         def derive_key(length):
@@ -201,7 +219,7 @@ def run_tests():
     print(f"Total:  {total}")
 
     if failed == 0:
-        print("UECDH v2.0.0 is 100% PRODUCTION-READY!")
+        print("🎉 UECDH v2.2.0-FINAL is 100% PRODUCTION-READY!")
     else:
         print("Fix failed tests before production use.")
 
@@ -213,3 +231,4 @@ if __name__ == "__main__":
         run_tests()
     except Exception as e:
         print(f"\nTest suite crashed: {e}")
+
