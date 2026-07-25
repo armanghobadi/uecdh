@@ -11,7 +11,7 @@ Optimized for ESP32 | Memory-safe | Constant-time | Zero dependencies
 Author: Arman Ghobadi | Date: February 2026
 License: MIT
 
-Changes in v2.3.0:
+Changes in v3:
 - CRITICAL FIX: Montgomery ladder now correctly multiplies z3 by u (x1)
 - Now passes ALL RFC 7748 §6.1 test vectors + full commutativity
 - 100% production-ready for industrial/IoT use
@@ -30,7 +30,7 @@ class UECDH:
     """
 
     KEY_SIZE = 32
-    MAX_LIFETIME = 3600  # 1 hour (recommended for ephemeral keys)
+    MAX_LIFETIME = 86400  # 24 hour (recommended for ephemeral keys)
     BASE_POINT = b'\x09' + b'\x00' * 31
 
     def __init__(self):

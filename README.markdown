@@ -18,10 +18,9 @@ Designed for ESP32 and any resource-constrained IoT device that needs secure eph
 > **Zero heap fragmentation** – works reliably on devices with less than 40 KB free RAM.
 
 **Standards compliance**  
-- RFC 7748 – X25519 key exchange  
-- RFC 5869 – HKDF-SHA256  
-- RFC 6090 – Additional X25519 validation checks  
-- NIST SP 800-56A Rev. 3 – Ephemeral ECDH  
+- RFC 7748 (X25519 - 100% compliance, verified with official test vectors)
+- RFC 5869 (HKDF-SHA256 - full compliance with HMAC)
+- RFC 2104 (HMAC-SHA256)  
 
 ---
 
@@ -55,7 +54,7 @@ from tests.uint import test
 ```
 ![Unit Tests](./Docs/imgs/tests/test.png)
 
-
+![POC Tests](./Docs/imgs/tests/poc.png)
 
 ### References
 - NIST SP 800-56A Rev. 3 (2020)
